@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMPORA — Sistem Monitoring Alat Peraga Promosi Realtime</title>
+  <meta name="description" content="SIMPORA: Dashboard digital realtime untuk monitoring alat peraga promosi kesehatan. Inovasi Lean Management, Zero Budget." />
+
+  <!-- ============ TAILWIND (Play CDN) ============ -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- ============ LUCIDE ICONS ============ -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- ============ FONTS ============ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- ============ TAILWIND CONFIG ============ -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // Deep navy scale (dominant brand color)
+            navy: {
+              50:'#eef2f9', 100:'#d9e1f1', 200:'#b4c4e1', 300:'#869fcd',
+              400:'#5878b1', 500:'#3c5a93', 600:'#2d4675', 700:'#22345b',
+              800:'#142442', 900:'#0c1830', 950:'#070f20'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            display: ['"Sora"', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          },
+          boxShadow: {
+            'soft': '0 1px 2px rgba(12,24,48,.04), 0 8px 24px -12px rgba(12,24,48,.18)',
+            'lift': '0 12px 40px -12px rgba(12,24,48,.28)',
+            'glow': '0 0 0 1px rgba(20,184,166,.25), 0 18px 50px -18px rgba(20,184,166,.35)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- ============ CUSTOM CSS (atmosphere, motion, details) ============ -->
+  <style>
+    :root { color-scheme: light; }
+    html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    body { font-family: '"Plus Jakarta Sans"', sans-serif; }
+    section[id]{ scroll-margin-top: 5.5rem; }
+
+    .font-display{ font-family:'Sora', sans-serif; }
+
+    /* ---- Atmospheric navy background for hero / dark sections ---- */
+    .navy-atmos{
+      background:
+        radial-gradient(60% 55% at 82% -5%, rgba(20,184,166,.22), transparent 60%),
+        radial-gradient(55% 60% at -5% 105%, rgba(60,90,147,.55), transparent 55%),
+        linear-gradient(165deg, #0c1830 0%, #070f20 100%);
+    }
+    .dot-grid{
+      background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1.4px);
+      background-size: 24px 24px;
+    }
+    .grid-lines{
+      background-image:
+        linear-gradient(to right, rgba(34,52,91,.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(34,52,91,.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ---- Scroll reveal ---- */
+    .reveal{ opacity:0; transform: translateY(20px); transition: opacity .7s cubic-bezier(.22,.7,.2,1), transform .7s cubic-bezier(.22,.7,.2,1); }
+    .reveal.in-view{ opacity:1; transform:none; }
+
+    /* ---- Live pulse dot ---- */
+    .pulse-dot{ position:relative; }
+    .pulse-dot::after{
+      content:''; position:absolute; inset:0; border-radius:9999px;
+      background:currentColor; opacity:.5; animation:pulse 1.8s ease-out infinite;
+    }
+    @keyframes pulse{ 0%{transform:scale(1);opacity:.5} 70%{transform:scale(2.6);opacity:0} 100%{opacity:0} }
+
+    /* ---- KPI / card hover ---- */
+    .kpi-card{ transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+    .kpi-card:hover{ transform: translateY(-4px); }
+    .hover-lift{ transition: transform .3s cubic-bezier(.22,.7,.2,1), box-shadow .3s ease; }
+    .hover-lift:hover{ transform: translateY(-6px); }
+
+    /* ---- Table row enter + new-row flash ---- */
+    tbody tr{ transition: background-color .25s ease; }
+    @keyframes flashRow{ 0%{ background-color: rgba(20,184,166,.18) } 100%{ background-color: transparent } }
+    .row-new{ animation: flashRow 2.4s ease-out forwards; }
+    .row-fade{ animation: rowFade .45s ease both; }
+    @keyframes rowFade{ from{opacity:0; transform: translateY(6px)} to{opacity:1; transform:none} }
+
+    /* ---- Toast ---- */
+    .toast{
+      transform: translateX(120%); opacity:0;
+      transition: transform .4s cubic-bezier(.22,.9,.2,1), opacity .4s ease;
+    }
+    .toast.show{ transform: translateX(0); opacity:1; }
+
+    /* ---- Custom scrollbar (table) ---- */
+    .nice-scroll::-webkit-scrollbar{ height:9px; width:9px; }
+    .nice-scroll::-webkit-scrollbar-track{ background: #eef2f9; border-radius: 9999px; }
+    .nice-scroll::-webkit-scrollbar-thumb{ background: #b4c4e1; border-radius: 9999px; }
+    .nice-scroll::-webkit-scrollbar-thumb:hover{ background:#869fcd; }
+
+    /* ---- Inputs ---- */
+    .field{
+      width:100%; border:1px solid #e2e8f0; background:#fff; border-radius:.75rem;
+      padding:.65rem .85rem; font-size:.9rem; color:#0c1830; transition:.18s;
+    }
+    .field:focus{ outline:none; border-color:#14b8a6; box-shadow:0 0 0 4px rgba(20,184,166,.14); }
+    .field::placeholder{ color:#94a3b8; }
+    select.field{ appearance:none; background-image:none; }
+
+    .marquee-fade{ -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-navy-900 antialiased selection:bg-teal-200/60">
+
+  <!-- =========================================================
+       NAVBAR
+  ========================================================== -->
+  <header class="fixed top-0 inset-x-0 z-50 border-b border-white/10 backdrop-blur-md bg-navy-950/80">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-teal-400 to-navy-500 grid place-items-center font-display font-bold text-white shadow-glow group-hover:scale-105 transition-transform">S</div>
+        <div class="leading-none">
+          <p class="font-display font-bold text-white tracking-tight">SIMPORA</p>
+          <p class="text-[10px] uppercase tracking-[0.18em] text-teal-300/80">Monitoring Realtime</p>
+        </div>
+      </a>
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-1 text-sm">
+        <a href="#hero" class="px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition">Beranda</a>
+        <a href="#dashboard" class="px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition">Dashboard</a>
+        <a href="#dampak" class="px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition">Dampak</a>
+        <a href="#roadmap" class="px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition">Roadmap</a>
+        <a href="#input" class="px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition">Input Data</a>
+      </div>
+
+      <!-- Right side -->
+      <div class="flex items-center gap-3">
+        <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-400/10 ring-1 ring-emerald-400/30 text-emerald-300 text-xs font-semibold">
+          <span class="relative h-2 w-2 rounded-full bg-emerald-400 pulse-dot text-emerald-400"></span> LIVE
+        </span>
+        <a href="#input" class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-navy-900 bg-teal-400 hover:bg-teal-300 px-3.5 py-2 rounded-lg transition shadow-sm">
+          <i data-lucide="plus" class="h-4 w-4"></i> Tambah Media
+        </a>
+        <button id="menu-toggle" class="md:hidden h-9 w-9 grid place-items-center rounded-lg text-white hover:bg-white/10 transition" aria-label="Menu">
+          <i data-lucide="menu" class="h-5 w-5"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="md:hidden hidden border-t border-white/10 bg-navy-950/95 backdrop-blur px-4 py-3 space-y-1">
+      <a href="#hero" class="mob-link block px-3 py-2 rounded-lg text-slate-200 hover:bg-white/5">Beranda</a>
+      <a href="#dashboard" class="mob-link block px-3 py-2 rounded-lg text-slate-200 hover:bg-white/5">Dashboard</a>
+      <a href="#dampak" class="mob-link block px-3 py-2 rounded-lg text-slate-200 hover:bg-white/5">Dampak & Efisiensi</a>
+      <a href="#roadmap" class="mob-link block px-3 py-2 rounded-lg text-slate-200 hover:bg-white/5">Roadmap</a>
+      <a href="#input" class="mob-link block px-3 py-2 rounded-lg text-slate-200 hover:bg-white/5">Input Data</a>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       1. HERO & INTRODUCTION
+  ========================================================== -->
+  <section id="hero" class="relative navy-atmos text-white overflow-hidden pt-28 pb-44 sm:pt-32 sm:pb-52">
+    <div class="absolute inset-0 dot-grid opacity-70"></div>
+    <!-- decorative blurred orbs -->
+    <div class="absolute -top-24 right-10 h-72 w-72 rounded-full bg-teal-500/20 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-navy-500/40 blur-3xl"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <!-- Eyebrow -->
+      <div class="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 ring-1 ring-white/15 text-xs sm:text-sm text-teal-200 font-semibold tracking-wide backdrop-blur">
+        <i data-lucide="sparkles" class="h-4 w-4"></i>
+        Inovasi Lean Management · Internal Rumah Sakit
+      </div>
+
+      <!-- Title -->
+      <h1 class="reveal font-display font-extrabold tracking-tight mt-6 text-5xl sm:text-7xl lg:text-8xl bg-gradient-to-b from-white via-white to-teal-200 bg-clip-text text-transparent" style="transition-delay:.05s">
+        SIMPORA
+      </h1>
+      <p class="reveal mt-3 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto" style="transition-delay:.1s">
+        <span class="text-white font-semibold">Sistem Monitoring Alat Peraga Promosi Realtime</span>
+      </p>
+
+      <!-- Subtitle -->
+      <p class="reveal mt-6 text-lg sm:text-2xl text-slate-200/90 max-w-3xl mx-auto leading-relaxed font-light" style="transition-delay:.15s">
+        “Lean Management Innovation: <span class="text-teal-300 font-medium">Zero-Budget Digital Dashboard</span> for Public Communication Monitoring.”
+      </p>
+
+      <!-- Author badge -->
+      <div class="reveal mt-9 inline-flex items-center gap-3 pl-1.5 pr-5 py-1.5 rounded-full bg-white/5 ring-1 ring-white/15 backdrop-blur" style="transition-delay:.2s">
+        <span class="h-9 w-9 rounded-full bg-gradient-to-br from-teal-300 to-navy-400 grid place-items-center font-display font-bold text-navy-900 text-sm">RS</span>
+        <span class="text-left leading-tight">
+          <span class="block text-sm font-semibold text-white">Rika Salsabilla, S.I.Kom</span>
+          <span class="block text-[11px] sm:text-xs text-slate-400">Timker Hukum, Humas, Promkes &amp; Pemasaran</span>
+        </span>
+      </div>
+
+      <!-- CTAs -->
+      <div class="reveal mt-9 flex flex-col sm:flex-row items-center justify-center gap-3" style="transition-delay:.25s">
+        <a href="#dashboard" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-400 hover:bg-teal-300 text-navy-900 font-semibold transition shadow-glow w-full sm:w-auto justify-center">
+          <i data-lucide="layout-dashboard" class="h-5 w-5"></i> Lihat Dashboard
+        </a>
+        <a href="#dampak" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 ring-1 ring-white/15 text-white font-semibold transition w-full sm:w-auto justify-center">
+          <i data-lucide="trending-up" class="h-5 w-5"></i> Pelajari Dampak
+        </a>
+      </div>
+    </div>
+
+    <!-- ===== 3 VALUE PILLAR CARDS (overlap into next section) ===== -->
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+      <div class="grid sm:grid-cols-3 gap-4 sm:gap-5 sm:absolute sm:-bottom-32 sm:inset-x-0 sm:px-6 lg:px-8">
+        <!-- Realtime -->
+        <div class="reveal hover-lift rounded-2xl bg-white shadow-lift p-6 text-left">
+          <div class="h-12 w-12 rounded-xl bg-teal-50 text-teal-600 grid place-items-center ring-1 ring-teal-100">
+            <i data-lucide="activity" class="h-6 w-6"></i>
+          </div>
+          <h3 class="mt-4 font-display font-bold text-lg text-navy-900">Realtime Monitoring</h3>
+          <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Status alat peraga terpantau langsung — dari proses desain hingga terpasang &amp; dicopot.</p>
+        </div>
+        <!-- Zero Budget -->
+        <div class="reveal hover-lift rounded-2xl bg-white shadow-lift p-6 text-left" style="transition-delay:.08s">
+          <div class="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 grid place-items-center ring-1 ring-emerald-100">
+            <i data-lucide="wallet" class="h-6 w-6"></i>
+          </div>
+          <h3 class="mt-4 font-display font-bold text-lg text-navy-900">Zero Budget <span class="text-emerald-600">(Rp0)</span></h3>
+          <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Dibangun tanpa biaya pengadaan aplikasi — memanfaatkan tools digital yang sudah tersedia.</p>
+        </div>
+        <!-- Lean -->
+        <div class="reveal hover-lift rounded-2xl bg-white shadow-lift p-6 text-left" style="transition-delay:.16s">
+          <div class="h-12 w-12 rounded-xl bg-navy-50 text-navy-700 grid place-items-center ring-1 ring-navy-100">
+            <i data-lucide="recycle" class="h-6 w-6"></i>
+          </div>
+          <h3 class="mt-4 font-display font-bold text-lg text-navy-900">Lean Efficiency</h3>
+          <p class="mt-1.5 text-sm text-slate-500 leading-relaxed">Mengurangi waste: <span class="font-medium text-navy-700">Waiting, Overprocessing,</span> dan <span class="font-medium text-navy-700">Motion</span>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       2. MAIN REALTIME DASHBOARD
+  ========================================================== -->
+  <section id="dashboard" class="relative bg-slate-50 pt-24 sm:pt-48 pb-20">
+    <div class="absolute inset-0 grid-lines opacity-60"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      <!-- Header -->
+      <div class="reveal flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-600">Core Feature</p>
+          <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-navy-900 mt-2">Dashboard Monitoring Realtime</h2>
+          <p class="text-slate-500 mt-2 max-w-2xl">Pusat kendali alat peraga promosi kesehatan. Data terintegrasi, status terkini, dan rekap instan dalam satu layar.</p>
+        </div>
+        <div class="inline-flex items-center gap-2.5 self-start lg:self-auto px-4 py-2.5 rounded-xl bg-white ring-1 ring-slate-200 shadow-soft">
+          <span class="relative h-2.5 w-2.5 rounded-full bg-emerald-500 pulse-dot text-emerald-500"></span>
+          <span class="text-sm text-slate-600">Sinkron terakhir</span>
+          <span id="live-time" class="text-sm font-semibold text-navy-900 tabular-nums font-display">--:--:--</span>
+        </div>
+      </div>
+
+      <!-- ===== KPI CARDS ===== -->
+      <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 mt-8">
+        <!-- Total Aktif -->
+        <button data-filter="aktif" class="kpi-card group text-left rounded-2xl bg-navy-900 text-white p-4 sm:p-5 shadow-soft hover:shadow-lift ring-1 ring-navy-800 col-span-2 lg:col-span-1">
+          <div class="flex items-center justify-between">
+            <span class="h-9 w-9 rounded-lg bg-teal-400/15 text-teal-300 grid place-items-center"><i data-lucide="layers" class="h-5 w-5"></i></span>
+          </div>
+          <p id="kpi-aktif" class="font-display font-extrabold text-3xl sm:text-4xl mt-3 tabular-nums">0</p>
+          <p class="text-xs text-slate-300 mt-1">Total Media Aktif</p>
+        </button>
+        <!-- Proses Desain -->
+        <button data-filter="Proses Desain" class="kpi-card text-left rounded-2xl bg-white p-4 sm:p-5 shadow-soft ring-1 ring-slate-200 hover:ring-slate-300">
+          <span class="h-9 w-9 rounded-lg bg-slate-100 text-slate-500 grid place-items-center"><i data-lucide="pencil-ruler" class="h-5 w-5"></i></span>
+          <p id="kpi-desain" class="font-display font-extrabold text-3xl mt-3 text-navy-900 tabular-nums">0</p>
+          <p class="text-xs text-slate-500 mt-1">Proses Desain</p>
+        </button>
+        <!-- Proses Cetak -->
+        <button data-filter="Proses Cetak" class="kpi-card text-left rounded-2xl bg-white p-4 sm:p-5 shadow-soft ring-1 ring-slate-200 hover:ring-slate-300">
+          <span class="h-9 w-9 rounded-lg bg-amber-50 text-amber-600 grid place-items-center"><i data-lucide="printer" class="h-5 w-5"></i></span>
+          <p id="kpi-cetak" class="font-display font-extrabold text-3xl mt-3 text-navy-900 tabular-nums">0</p>
+          <p class="text-xs text-slate-500 mt-1">Proses Cetak</p>
+        </button>
+        <!-- Siap Pasang -->
+        <button data-filter="Siap Pasang" class="kpi-card text-left rounded-2xl bg-white p-4 sm:p-5 shadow-soft ring-1 ring-slate-200 hover:ring-slate-300">
+          <span class="h-9 w-9 rounded-lg bg-sky-50 text-sky-600 grid place-items-center"><i data-lucide="package-check" class="h-5 w-5"></i></span>
+          <p id="kpi-siap" class="font-display font-extrabold text-3xl mt-3 text-navy-900 tabular-nums">0</p>
+          <p class="text-xs text-slate-500 mt-1">Siap Pasang</p>
+        </button>
+        <!-- Terpasang -->
+        <button data-filter="Terpasang" class="kpi-card text-left rounded-2xl bg-white p-4 sm:p-5 shadow-soft ring-1 ring-slate-200 hover:ring-slate-300">
+          <span class="h-9 w-9 rounded-lg bg-emerald-50 text-emerald-600 grid place-items-center"><i data-lucide="badge-check" class="h-5 w-5"></i></span>
+          <p id="kpi-terpasang" class="font-display font-extrabold text-3xl mt-3 text-navy-900 tabular-nums">0</p>
+          <p class="text-xs text-slate-500 mt-1">Terpasang</p>
+        </button>
+        <!-- Dicopot / Arsip -->
+        <button data-filter="nonaktif" class="kpi-card text-left rounded-2xl bg-white p-4 sm:p-5 shadow-soft ring-1 ring-slate-200 hover:ring-slate-300">
+          <span class="h-9 w-9 rounded-lg bg-rose-50 text-rose-600 grid place-items-center"><i data-lucide="archive" class="h-5 w-5"></i></span>
+          <p id="kpi-nonaktif" class="font-display font-extrabold text-3xl mt-3 text-navy-900 tabular-nums">0</p>
+          <p class="text-xs text-slate-500 mt-1">Dicopot / Arsip</p>
+        </button>
+      </div>
+
+      <!-- ===== TABLE PANEL ===== -->
+      <div class="reveal mt-8 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft overflow-hidden">
+        <!-- Toolbar -->
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center gap-4">
+          <!-- Search -->
+          <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input id="search-input" type="text" placeholder="Cari nama media, jenis, atau lokasi…"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-navy-900 focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-400/15 focus:bg-white transition" />
+          </div>
+          <!-- Result count -->
+          <p id="result-count" class="text-sm text-slate-500 lg:ml-auto order-last lg:order-none"></p>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 overflow-x-auto nice-scroll">
+          <div id="filter-tabs" class="flex items-center gap-2 w-max">
+            <!-- tabs injected by JS -->
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto nice-scroll">
+          <table class="w-full min-w-[960px] text-sm">
+            <thead>
+              <tr class="text-left text-[11px] uppercase tracking-wider text-slate-400 bg-slate-50/70">
+                <th class="px-5 py-3.5 font-semibold">Nama &amp; Jenis Media</th>
+                <th class="px-5 py-3.5 font-semibold text-center">Jumlah</th>
+                <th class="px-5 py-3.5 font-semibold">Lokasi Pemasangan</th>
+                <th class="px-5 py-3.5 font-semibold">Status</th>
+                <th class="px-5 py-3.5 font-semibold">Tgl Pasang / Copot</th>
+                <th class="px-5 py-3.5 font-semibold text-center">Dokumen</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-100">
+              <!-- rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty state -->
+        <div id="empty-state" class="hidden py-16 text-center">
+          <div class="h-14 w-14 rounded-2xl bg-slate-100 text-slate-400 grid place-items-center mx-auto"><i data-lucide="search-x" class="h-7 w-7"></i></div>
+          <p class="mt-4 font-semibold text-navy-900">Tidak ada media yang cocok</p>
+          <p class="text-sm text-slate-500 mt-1">Coba ubah kata kunci pencarian atau filter status.</p>
+        </div>
+      </div>
+
+      <p class="mt-4 text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="info" class="h-3.5 w-3.5"></i> Tip: klik kartu KPI di atas untuk memfilter tabel secara cepat. Indikator <span class="font-medium text-slate-500">Lihat Lokasi</span> &amp; <span class="font-medium text-slate-500">Nota Dinas</span> bersifat simulasi.</p>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       3. BEFORE VS AFTER
+  ========================================================== -->
+  <section id="dampak" class="relative bg-white py-20 sm:py-24 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="reveal text-center max-w-3xl mx-auto">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-600">Impact &amp; Efficiency</p>
+        <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-navy-900 mt-2">Sebelum vs Sesudah SIMPORA</h2>
+        <p class="text-slate-500 mt-3">Transformasi dari proses manual berbasis chat menuju monitoring digital realtime — lebih cepat, lebih terkontrol, dan tanpa biaya.</p>
+      </div>
+
+      <!-- Comparison grid -->
+      <div class="reveal mt-12 rounded-3xl ring-1 ring-slate-200 shadow-soft overflow-hidden">
+        <!-- Header row -->
+        <div class="grid grid-cols-12 bg-slate-50 text-sm font-semibold">
+          <div class="col-span-12 sm:col-span-4 px-5 py-4 text-slate-500 uppercase tracking-wider text-xs flex items-center">Aspek</div>
+          <div class="col-span-6 sm:col-span-4 px-5 py-4 text-rose-600 flex items-center gap-2 border-l border-slate-200"><i data-lucide="circle-x" class="h-4 w-4"></i> Sebelum</div>
+          <div class="col-span-6 sm:col-span-4 px-5 py-4 text-teal-700 bg-teal-50/60 flex items-center gap-2 border-l border-slate-200"><i data-lucide="circle-check-big" class="h-4 w-4"></i> Sesudah</div>
+        </div>
+
+        <!-- Rows -->
+        <div class="divide-y divide-slate-100">
+          <!-- Row template -->
+          <div class="grid grid-cols-12 items-center hover:bg-slate-50/60 transition">
+            <div class="col-span-12 sm:col-span-4 px-5 py-4 font-medium text-navy-900 flex items-center gap-2.5"><i data-lucide="radio" class="h-4 w-4 text-slate-400"></i> Monitoring Status</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 text-slate-500 border-l border-slate-100">Manual / Chat (WA)</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 font-semibold text-teal-700 bg-teal-50/40 border-l border-slate-100">Realtime Dashboard</div>
+          </div>
+          <div class="grid grid-cols-12 items-center hover:bg-slate-50/60 transition">
+            <div class="col-span-12 sm:col-span-4 px-5 py-4 font-medium text-navy-900 flex items-center gap-2.5"><i data-lucide="clock" class="h-4 w-4 text-slate-400"></i> Rekap Data</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 text-slate-500 border-l border-slate-100">±30–48 Jam</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 font-semibold text-teal-700 bg-teal-50/40 border-l border-slate-100">±5–30 Menit</div>
+          </div>
+          <div class="grid grid-cols-12 items-center hover:bg-slate-50/60 transition">
+            <div class="col-span-12 sm:col-span-4 px-5 py-4 font-medium text-navy-900 flex items-center gap-2.5"><i data-lucide="shield-alert" class="h-4 w-4 text-slate-400"></i> Risiko Data Terlewat</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 text-slate-500 border-l border-slate-100">Tinggi</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 font-semibold text-teal-700 bg-teal-50/40 border-l border-slate-100">Lebih Terkontrol</div>
+          </div>
+          <div class="grid grid-cols-12 items-center hover:bg-slate-50/60 transition">
+            <div class="col-span-12 sm:col-span-4 px-5 py-4 font-medium text-navy-900 flex items-center gap-2.5"><i data-lucide="wallet" class="h-4 w-4 text-slate-400"></i> Biaya Aplikasi</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 text-slate-500 border-l border-slate-100">Potensi Biaya Tinggi</div>
+            <div class="col-span-6 sm:col-span-4 px-5 py-4 font-bold text-emerald-600 bg-teal-50/40 border-l border-slate-100">Rp0 (Zero Budget)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== WORKFLOW FLOWCHART ===== -->
+      <div class="reveal mt-16">
+        <h3 class="font-display font-bold text-xl text-navy-900 text-center">Alur Kerja yang Disederhanakan</h3>
+        <div class="mt-8 flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-2">
+          <!-- Step 1 -->
+          <div class="flex-1 max-w-sm mx-auto lg:mx-0 hover-lift rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft p-6 text-center">
+            <div class="mx-auto h-14 w-14 rounded-2xl bg-navy-900 text-teal-300 grid place-items-center"><i data-lucide="file-input" class="h-7 w-7"></i></div>
+            <span class="inline-block mt-4 text-[11px] font-bold text-teal-600 uppercase tracking-wider">Langkah 1</span>
+            <p class="font-display font-bold text-navy-900 mt-1">Input Data</p>
+            <p class="text-sm text-slate-500 mt-1.5">Petugas mengisi data alat peraga melalui form digital.</p>
+          </div>
+          <!-- Arrow -->
+          <div class="grid place-items-center text-slate-300 rotate-90 lg:rotate-0 py-2 lg:py-0"><i data-lucide="arrow-right" class="h-7 w-7"></i></div>
+          <!-- Step 2 -->
+          <div class="flex-1 max-w-sm mx-auto lg:mx-0 hover-lift rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft p-6 text-center">
+            <div class="mx-auto h-14 w-14 rounded-2xl bg-navy-900 text-teal-300 grid place-items-center"><i data-lucide="database" class="h-7 w-7"></i></div>
+            <span class="inline-block mt-4 text-[11px] font-bold text-teal-600 uppercase tracking-wider">Langkah 2</span>
+            <p class="font-display font-bold text-navy-900 mt-1">Data Tersimpan</p>
+            <p class="text-sm text-slate-500 mt-1.5">Tersimpan otomatis &amp; aman dalam sistem terpusat.</p>
+          </div>
+          <!-- Arrow -->
+          <div class="grid place-items-center text-slate-300 rotate-90 lg:rotate-0 py-2 lg:py-0"><i data-lucide="arrow-right" class="h-7 w-7"></i></div>
+          <!-- Step 3 -->
+          <div class="flex-1 max-w-sm mx-auto lg:mx-0 hover-lift rounded-2xl bg-gradient-to-br from-teal-500 to-navy-700 text-white shadow-lift p-6 text-center ring-1 ring-teal-400/30">
+            <div class="mx-auto h-14 w-14 rounded-2xl bg-white/15 text-white grid place-items-center"><i data-lucide="layout-dashboard" class="h-7 w-7"></i></div>
+            <span class="inline-block mt-4 text-[11px] font-bold text-teal-200 uppercase tracking-wider">Langkah 3</span>
+            <p class="font-display font-bold mt-1">Dashboard Realtime</p>
+            <p class="text-sm text-teal-50/90 mt-1.5">Monitoring terintegrasi yang dapat diakses kapan saja.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       4. FUTURE SUSTAINABILITY & ROADMAP
+  ========================================================== -->
+  <section id="roadmap" class="relative navy-atmos text-white py-20 sm:py-24 overflow-hidden">
+    <div class="absolute inset-0 dot-grid opacity-50"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="reveal text-center max-w-3xl mx-auto">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-300">Future Sustainability</p>
+        <h2 class="font-display font-extrabold text-3xl sm:text-4xl mt-2">Roadmap Inovasi Berkelanjutan</h2>
+        <p class="text-slate-300 mt-3">SIMPORA dirancang untuk tumbuh. Berikut tahap pengembangan berikutnya untuk monitoring yang semakin cerdas.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-5 mt-12">
+        <!-- QR -->
+        <div class="reveal hover-lift rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur p-7 group">
+          <div class="flex items-center justify-between">
+            <div class="h-12 w-12 rounded-xl bg-teal-400/15 text-teal-300 grid place-items-center group-hover:scale-105 transition-transform"><i data-lucide="qr-code" class="h-6 w-6"></i></div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2.5 py-1 rounded-full ring-1 ring-white/10">Fase 2</span>
+          </div>
+          <h3 class="font-display font-bold text-lg mt-5">QR Code Monitoring</h3>
+          <p class="text-sm text-slate-300 mt-2 leading-relaxed">Scan QR di lokasi pemasangan untuk verifikasi titik secara instan dan akurat di lapangan.</p>
+        </div>
+        <!-- Photo -->
+        <div class="reveal hover-lift rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur p-7 group" style="transition-delay:.08s">
+          <div class="flex items-center justify-between">
+            <div class="h-12 w-12 rounded-xl bg-teal-400/15 text-teal-300 grid place-items-center group-hover:scale-105 transition-transform"><i data-lucide="camera" class="h-6 w-6"></i></div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2.5 py-1 rounded-full ring-1 ring-white/10">Fase 3</span>
+          </div>
+          <h3 class="font-display font-bold text-lg mt-5">Integrasi Dokumentasi Foto</h3>
+          <p class="text-sm text-slate-300 mt-2 leading-relaxed">Upload foto live yang otomatis dicocokkan dengan data media — bukti pemasangan real.</p>
+        </div>
+        <!-- Analytics -->
+        <div class="reveal hover-lift rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur p-7 group" style="transition-delay:.16s">
+          <div class="flex items-center justify-between">
+            <div class="h-12 w-12 rounded-xl bg-teal-400/15 text-teal-300 grid place-items-center group-hover:scale-105 transition-transform"><i data-lucide="bar-chart" class="h-6 w-6"></i></div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2.5 py-1 rounded-full ring-1 ring-white/10">Fase 4</span>
+          </div>
+          <h3 class="font-display font-bold text-lg mt-5">Rekap Otomatis &amp; Grafik</h3>
+          <p class="text-sm text-slate-300 mt-2 leading-relaxed">Analitik media promosi dengan grafik tren &amp; laporan otomatis untuk pengambilan keputusan.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       5. SIMULATED INPUT FORM
+  ========================================================== -->
+  <section id="input" class="relative bg-slate-50 py-20 sm:py-24">
+    <div class="absolute inset-0 grid-lines opacity-60"></div>
+    <div class="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="reveal text-center">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-teal-600">Simulasi Interaktif</p>
+        <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-navy-900 mt-2">Tambah Media Promosi Baru</h2>
+        <p class="text-slate-500 mt-3">Isi form di bawah lalu kirim — data akan langsung muncul di tabel dashboard sebagai bukti kemampuan realtime.</p>
+      </div>
+
+      <form id="add-form" class="reveal mt-10 rounded-2xl bg-white ring-1 ring-slate-200 shadow-soft p-6 sm:p-8 grid sm:grid-cols-2 gap-5" novalidate>
+        <!-- Nama Media -->
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Nama Media <span class="text-rose-500">*</span></label>
+          <input name="nama" type="text" required placeholder="cth. Banner Vaksinasi Booster" class="field" />
+        </div>
+        <!-- Jenis -->
+        <div>
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Jenis Media <span class="text-rose-500">*</span></label>
+          <div class="relative">
+            <select name="jenis" required class="field pr-9">
+              <option value="" disabled selected>Pilih jenis…</option>
+              <option>Banner</option>
+              <option>Standing Banner</option>
+              <option>Poster</option>
+              <option>Backdrop</option>
+              <option>X-Banner</option>
+            </select>
+            <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          </div>
+        </div>
+        <!-- Jumlah -->
+        <div>
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Jumlah Media <span class="text-rose-500">*</span></label>
+          <input name="jumlah" type="number" min="1" required placeholder="cth. 5" class="field" />
+        </div>
+        <!-- Lokasi -->
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Lokasi Pemasangan <span class="text-rose-500">*</span></label>
+          <input name="lokasi" type="text" required placeholder="cth. Lobby Utama Lt. 1" class="field" />
+        </div>
+        <!-- Status -->
+        <div>
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Status <span class="text-rose-500">*</span></label>
+          <div class="relative">
+            <select name="status" required class="field pr-9">
+              <option value="" disabled selected>Pilih status…</option>
+              <option>Proses Desain</option>
+              <option>Proses Cetak</option>
+              <option>Siap Pasang</option>
+              <option>Terpasang</option>
+              <option>Dicopot</option>
+              <option>Arsip</option>
+            </select>
+            <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          </div>
+        </div>
+        <!-- Tanggal Pasang -->
+        <div>
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Tanggal Pemasangan</label>
+          <input name="pasang" type="date" class="field" />
+        </div>
+        <!-- Link Nota Dinas -->
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-semibold text-navy-900 mb-1.5">Link Nota Dinas / Proposal</label>
+          <div class="relative">
+            <i data-lucide="link" class="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input name="link" type="text" placeholder="cth. https://drive.internal/nota-dinas-123" class="field pl-10" />
+          </div>
+        </div>
+        <!-- Actions -->
+        <div class="sm:col-span-2 flex flex-col sm:flex-row gap-3 pt-1">
+          <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold transition shadow-soft flex-1">
+            <i data-lucide="send" class="h-4 w-4"></i> Simulasikan &amp; Tambahkan
+          </button>
+          <button type="reset" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-slate-50 ring-1 ring-slate-200 text-navy-900 font-semibold transition">
+            <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Reset
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       FOOTER
+  ========================================================== -->
+  <footer class="bg-navy-950 text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-teal-400 to-navy-500 grid place-items-center font-display font-bold text-white">S</div>
+          <div>
+            <p class="font-display font-bold text-white">SIMPORA</p>
+            <p class="text-xs">Sistem Monitoring Alat Peraga Promosi Realtime</p>
+          </div>
+        </div>
+        <div class="text-sm md:text-right">
+          <p class="text-white font-semibold">Rika Salsabilla, S.I.Kom</p>
+          <p class="text-xs mt-0.5">Timker Hukum, Humas, Promkes &amp; Pemasaran</p>
+        </div>
+      </div>
+      <div class="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <p class="flex items-center gap-1.5"><i data-lucide="leaf" class="h-3.5 w-3.5 text-teal-400"></i> Lean Management Innovation · Zero Budget (Rp0)</p>
+        <p>© <span id="year"></span> SIMPORA — Prototipe Internal &amp; Simulasi.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ TOAST CONTAINER ============ -->
+  <div id="toast-container" class="fixed top-20 right-4 sm:right-6 z-[60] space-y-3 w-[min(92vw,360px)]"></div>
+
+  <!-- =========================================================
+       JAVASCRIPT  (modular, commented vanilla JS)
+  ========================================================== -->
+  <script>
+  /* =========================================================
+     SIMPORA — Front-end Logic
+     Modules:
+       1. State & seed data
+       2. Helpers (date, status styling)
+       3. Metrics (KPI) calculation + count-up
+       4. Table rendering + filtering + search
+       5. Filter tabs (build + bind)
+       6. Form submission simulation
+       7. Toast notifications
+       8. Misc UX (clock, reveal-on-scroll, mobile menu)
+       9. Init
+  ========================================================== */
+
+  (function () {
+    'use strict';
+
+    /* ---------- 1. STATE & SEED DATA ---------- */
+    let activeFilter = 'all';   // 'all' | 'aktif' | 'nonaktif' | <status>
+    let searchQuery  = '';
+    let newRowId     = null;    // id of the most recently added row (for flash)
+
+    // Master dataset — realistic hospital promotion media
+    let mediaData = [
+      { id:1,  nama:'Banner Vaksinasi Booster',            jenis:'Banner',          jumlah:5,  lokasi:'Lobby Utama Lt. 1',     status:'Terpasang',     pasang:'2025-01-10', copot:'',           link:'#' },
+      { id:2,  nama:'Standing Banner Layanan IGD 24 Jam',  jenis:'Standing Banner', jumlah:3,  lokasi:'Depan Pintu IGD',       status:'Terpasang',     pasang:'2025-02-05', copot:'',           link:'#' },
+      { id:3,  nama:'Poster Etika Batuk & Cuci Tangan',    jenis:'Poster',          jumlah:20, lokasi:'Koridor Poliklinik',    status:'Siap Pasang',   pasang:'',           copot:'',           link:'#' },
+      { id:4,  nama:'X-Banner Pendaftaran Online (SIMRS)', jenis:'X-Banner',        jumlah:4,  lokasi:'Loket Pendaftaran',     status:'Proses Cetak',  pasang:'',           copot:'',           link:'#' },
+      { id:5,  nama:'Backdrop Hari Kesehatan Nasional',    jenis:'Backdrop',        jumlah:1,  lokasi:'Aula Serbaguna Lt. 3',  status:'Proses Desain', pasang:'',           copot:'',           link:'#' },
+      { id:6,  nama:'Banner Donor Darah PMI',              jenis:'Banner',          jumlah:6,  lokasi:'Area Parkir & Lobby',   status:'Terpasang',     pasang:'2025-01-20', copot:'',           link:'#' },
+      { id:7,  nama:'Poster Cegah Stunting Sejak Dini',    jenis:'Poster',          jumlah:15, lokasi:'Poli Anak & Ruang KIA', status:'Terpasang',     pasang:'2024-12-15', copot:'',           link:'#' },
+      { id:8,  nama:'Standing Banner Promo MCU',           jenis:'Standing Banner', jumlah:2,  lokasi:'Lobby Eksekutif',       status:'Dicopot',       pasang:'2024-11-01', copot:'2025-02-28', link:'#' },
+      { id:9,  nama:'X-Banner Jadwal Praktik Dokter',      jenis:'X-Banner',        jumlah:8,  lokasi:'Setiap Poliklinik',     status:'Siap Pasang',   pasang:'',           copot:'',           link:'#' },
+      { id:10, nama:'Banner HUT Rumah Sakit ke-25',        jenis:'Banner',          jumlah:3,  lokasi:'Gerbang Utama',         status:'Arsip',         pasang:'2024-08-01', copot:'2024-09-30', link:'#' },
+      { id:11, nama:'Poster Protokol Kesehatan TB Paru',   jenis:'Poster',          jumlah:12, lokasi:'Poli Paru & DOTS',      status:'Proses Cetak',  pasang:'',           copot:'',           link:'#' },
+      { id:12, nama:'Backdrop Pelantikan Pejabat',         jenis:'Backdrop',        jumlah:1,  lokasi:'Aula Serbaguna Lt. 3',  status:'Arsip',         pasang:'2024-10-10', copot:'2024-10-11', link:'#' }
+    ];
+
+    /* ---------- 2. HELPERS ---------- */
+    const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    // Format ISO date (YYYY-MM-DD) -> "10 Jan 2025"; empty -> em dash
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const parts = iso.split('-');
+      if (parts.length !== 3) return iso;
+      return parseInt(parts[2], 10) + ' ' + MONTHS[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+    }
+
+    // Status -> Tailwind classes for badge + dot + jenis order
+    const STATUS_STYLES = {
+      'Proses Desain': { badge:'bg-slate-100 text-slate-600 ring-slate-200',     dot:'bg-slate-400'   },
+      'Proses Cetak':  { badge:'bg-amber-50 text-amber-700 ring-amber-200',      dot:'bg-amber-500'   },
+      'Siap Pasang':   { badge:'bg-sky-50 text-sky-700 ring-sky-200',            dot:'bg-sky-500'     },
+      'Terpasang':     { badge:'bg-emerald-50 text-emerald-700 ring-emerald-200',dot:'bg-emerald-500' },
+      'Dicopot':       { badge:'bg-rose-50 text-rose-700 ring-rose-200',         dot:'bg-rose-500'    },
+      'Arsip':         { badge:'bg-violet-50 text-violet-700 ring-violet-200',   dot:'bg-violet-500'  }
+    };
+
+    // The 6 statuses in display order (for filter tabs)
+    const STATUS_LIST = ['Proses Desain','Proses Cetak','Siap Pasang','Terpasang','Dicopot','Arsip'];
+
+    // Escape user input before injecting into innerHTML (XSS-safe)
+    function esc(str) {
+      return String(str).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+      });
+    }
+
+    function buildBadge(status) {
+      const s = STATUS_STYLES[status] || STATUS_STYLES['Proses Desain'];
+      return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ' + s.badge + '">' +
+               '<span class="h-1.5 w-1.5 rounded-full ' + s.dot + '"></span>' + esc(status) +
+             '</span>';
+    }
+
+    /* ---------- 3. METRICS (KPI) ---------- */
+    // Smooth count-up animation from current displayed value to target
+    function animateCount(el, target) {
+      if (!el) return;
+      const start = parseInt(el.textContent.replace(/\D/g, ''), 10) || 0;
+      if (start === target) { el.textContent = target; return; }
+      const duration = 650, t0 = performance.now();
+      function frame(now) {
+        const p = Math.min((now - t0) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+        el.textContent = Math.round(start + (target - start) * eased);
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function countByStatus(status) {
+      return mediaData.filter(function (r) { return r.status === status; }).length;
+    }
+
+    function renderMetrics() {
+      const inactive = ['Dicopot', 'Arsip'];
+      const aktif = mediaData.filter(function (r) { return inactive.indexOf(r.status) === -1; }).length;
+      const nonaktif = mediaData.filter(function (r) { return inactive.indexOf(r.status) !== -1; }).length;
+
+      animateCount(document.getElementById('kpi-aktif'),     aktif);
+      animateCount(document.getElementById('kpi-desain'),    countByStatus('Proses Desain'));
+      animateCount(document.getElementById('kpi-cetak'),     countByStatus('Proses Cetak'));
+      animateCount(document.getElementById('kpi-siap'),      countByStatus('Siap Pasang'));
+      animateCount(document.getElementById('kpi-terpasang'), countByStatus('Terpasang'));
+      animateCount(document.getElementById('kpi-nonaktif'),  nonaktif);
+
+      // highlight the active KPI card (ring) if its filter matches
+      document.querySelectorAll('.kpi-card').forEach(function (card) {
+        const match = card.getAttribute('data-filter') === activeFilter;
+        card.classList.toggle('ring-2', match);
+        card.classList.toggle('ring-teal-400', match);
+      });
+    }
+
+    /* ---------- 4. TABLE RENDER + FILTER + SEARCH ---------- */
+    function getFilteredData() {
+      const inactive = ['Dicopot', 'Arsip'];
+      let rows = mediaData.slice();
+
+      if (activeFilter === 'aktif') {
+        rows = rows.filter(function (r) { return inactive.indexOf(r.status) === -1; });
+      } else if (activeFilter === 'nonaktif') {
+        rows = rows.filter(function (r) { return inactive.indexOf(r.status) !== -1; });
+      } else if (activeFilter !== 'all') {
+        rows = rows.filter(function (r) { return r.status === activeFilter; });
+      }
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        rows = rows.filter(function (r) {
+          return (r.nama + ' ' + r.jenis + ' ' + r.lokasi).toLowerCase().indexOf(q) !== -1;
+        });
+      }
+      return rows;
+    }
+
+    function rowTemplate(r) {
+      const isNew = (r.id === newRowId) ? ' row-new' : '';
+      return '' +
+      '<tr class="row-fade hover:bg-slate-50/70' + isNew + '">' +
+        // Nama & Jenis
+        '<td class="px-5 py-4 align-top">' +
+          '<p class="font-semibold text-navy-900 leading-snug">' + esc(r.nama) + '</p>' +
+          '<span class="inline-block mt-1.5 text-[11px] font-medium px-2 py-0.5 rounded-md bg-navy-50 text-navy-600 ring-1 ring-navy-100">' + esc(r.jenis) + '</span>' +
+        '</td>' +
+        // Jumlah
+        '<td class="px-5 py-4 text-center align-top">' +
+          '<span class="font-display font-bold text-navy-900 text-lg tabular-nums">' + esc(r.jumlah) + '</span>' +
+          '<span class="block text-[11px] text-slate-400">unit</span>' +
+        '</td>' +
+        // Lokasi + View Map
+        '<td class="px-5 py-4 align-top">' +
+          '<p class="text-slate-700">' + esc(r.lokasi) + '</p>' +
+          '<button type="button" data-loc="' + esc(r.lokasi) + '" class="js-map mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-700 transition">' +
+            '<i data-lucide="map-pin" class="h-3.5 w-3.5"></i> Lihat Lokasi' +
+          '</button>' +
+        '</td>' +
+        // Status
+        '<td class="px-5 py-4 align-top">' + buildBadge(r.status) + '</td>' +
+        // Tgl Pasang / Copot
+        '<td class="px-5 py-4 align-top text-xs">' +
+          '<p class="text-slate-600"><span class="text-slate-400">Pasang:</span> ' + fmtDate(r.pasang) + '</p>' +
+          '<p class="text-slate-600 mt-0.5"><span class="text-slate-400">Copot:</span> ' + fmtDate(r.copot) + '</p>' +
+        '</td>' +
+        // Dokumen
+        '<td class="px-5 py-4 text-center align-top">' +
+          '<button type="button" data-doc="' + esc(r.nama) + '" class="js-doc inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 ring-1 ring-slate-200 text-xs font-semibold text-slate-600 transition">' +
+            '<i data-lucide="file-text" class="h-3.5 w-3.5"></i> Nota Dinas' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }
+
+    function renderTable() {
+      const body  = document.getElementById('table-body');
+      const empty = document.getElementById('empty-state');
+      const rows  = getFilteredData();
+
+      if (rows.length === 0) {
+        body.innerHTML = '';
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+        body.innerHTML = rows.map(rowTemplate).join('');
+      }
+
+      // result count label
+      document.getElementById('result-count').innerHTML =
+        'Menampilkan <span class="font-semibold text-navy-900">' + rows.length + '</span> dari ' + mediaData.length + ' media';
+
+      // re-render icons for freshly injected DOM
+      if (window.lucide) lucide.createIcons();
+
+      // bind simulated location / document buttons
+      body.querySelectorAll('.js-map').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showToast('info', 'Membuka Peta Lokasi', 'Lokasi: ' + btn.getAttribute('data-loc') + ' (simulasi).');
+        });
+      });
+      body.querySelectorAll('.js-doc').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showToast('info', 'Arsip Nota Dinas', 'Dokumen untuk "' + btn.getAttribute('data-doc') + '" (simulasi).');
+        });
+      });
+
+      // clear the "new row" flag after it has flashed once
+      newRowId = null;
+    }
+
+    /* ---------- 5. FILTER TABS ---------- */
+    function buildFilterTabs() {
+      const wrap = document.getElementById('filter-tabs');
+      const tabs = [{ label:'Semua', value:'all' }].concat(
+        STATUS_LIST.map(function (s) { return { label:s, value:s }; })
+      );
+      wrap.innerHTML = tabs.map(function (t) {
+        return '<button data-filter="' + t.value + '" class="filter-tab whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition">' + t.label + '</button>';
+      }).join('');
+
+      wrap.querySelectorAll('.filter-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setFilter(btn.getAttribute('data-filter'));
+        });
+      });
+      updateTabStyles();
+    }
+
+    function updateTabStyles() {
+      document.querySelectorAll('.filter-tab').forEach(function (btn) {
+        const active = btn.getAttribute('data-filter') === activeFilter;
+        btn.className = 'filter-tab whitespace-nowrap px-3.5 py-1.5 rounded-lg text-sm font-medium transition ' +
+          (active
+            ? 'bg-navy-900 text-white shadow-sm'
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200');
+      });
+    }
+
+    // Central filter setter — keeps tabs, KPI cards, and table in sync
+    function setFilter(value) {
+      activeFilter = value;
+      updateTabStyles();
+      renderMetrics(); // refresh KPI ring highlight
+      renderTable();
+    }
+
+    /* ---------- 6. FORM SUBMISSION SIMULATION ---------- */
+    function handleSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        nama:   form.nama.value.trim(),
+        jenis:  form.jenis.value,
+        jumlah: parseInt(form.jumlah.value, 10),
+        lokasi: form.lokasi.value.trim(),
+        status: form.status.value,
+        pasang: form.pasang.value,
+        link:   form.link.value.trim() || '#'
+      };
+
+      // simple validation
+      if (!data.nama || !data.jenis || !data.lokasi || !data.status || !data.jumlah || data.jumlah < 1) {
+        showToast('error', 'Data belum lengkap', 'Mohon isi semua kolom wajib (*) dengan benar.');
+        return;
+      }
+
+      // auto-fill install date if status is "Terpasang" but no date given
+      if (!data.pasang && data.status === 'Terpasang') {
+        data.pasang = new Date().toISOString().slice(0, 10);
+      }
+
+      // create record
+      const nextId = mediaData.reduce(function (m, r) { return Math.max(m, r.id); }, 0) + 1;
+      const record = {
+        id: nextId, nama: data.nama, jenis: data.jenis, jumlah: data.jumlah,
+        lokasi: data.lokasi, status: data.status, pasang: data.pasang, copot: '', link: data.link
+      };
+      mediaData.unshift(record); // add to top
+      newRowId = nextId;
+
+      // switch filter to "Semua" so the new row is always visible, then re-render
+      searchQuery = '';
+      document.getElementById('search-input').value = '';
+      setFilter('all');
+      renderMetrics();
+
+      // success feedback + reset
+      showToast('success', 'Media berhasil ditambahkan', '"' + data.nama + '" kini tampil di dashboard secara realtime.');
+      form.reset();
+
+      // smooth-scroll to the dashboard table to reveal the new row
+      document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ---------- 7. TOAST NOTIFICATIONS ---------- */
+    const TOAST_THEME = {
+      success: { icon:'circle-check-big', ring:'ring-emerald-200', bar:'bg-emerald-500', iconWrap:'bg-emerald-50 text-emerald-600' },
+      info:    { icon:'info',           ring:'ring-sky-200',     bar:'bg-sky-500',     iconWrap:'bg-sky-50 text-sky-600' },
+      error:   { icon:'alert-triangle', ring:'ring-rose-200',    bar:'bg-rose-500',    iconWrap:'bg-rose-50 text-rose-600' }
+    };
+
+    function showToast(type, title, message) {
+      const theme = TOAST_THEME[type] || TOAST_THEME.info;
+      const wrap = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'toast relative overflow-hidden flex items-start gap-3 bg-white rounded-xl shadow-lift ring-1 ' + theme.ring + ' p-4 pr-10';
+      el.innerHTML =
+        '<span class="absolute left-0 top-0 bottom-0 w-1 ' + theme.bar + '"></span>' +
+        '<span class="shrink-0 h-9 w-9 rounded-lg grid place-items-center ' + theme.iconWrap + '"><i data-lucide="' + theme.icon + '" class="h-5 w-5"></i></span>' +
+        '<div class="min-w-0">' +
+          '<p class="text-sm font-semibold text-navy-900">' + esc(title) + '</p>' +
+          '<p class="text-xs text-slate-500 mt-0.5 leading-snug">' + esc(message) + '</p>' +
+        '</div>' +
+        '<button class="js-close absolute top-2.5 right-2.5 text-slate-300 hover:text-slate-500 transition"><i data-lucide="x" class="h-4 w-4"></i></button>';
+
+      wrap.appendChild(el);
+      if (window.lucide) lucide.createIcons();
+
+      const close = function () {
+        el.classList.remove('show');
+        setTimeout(function () { el.remove(); }, 350);
+      };
+      el.querySelector('.js-close').addEventListener('click', close);
+
+      requestAnimationFrame(function () { el.classList.add('show'); });
+      setTimeout(close, 4200);
+    }
+
+    /* ---------- 8. MISC UX ---------- */
+    // Live clock — simulates a realtime sync timestamp
+    function tickClock() {
+      const el = document.getElementById('live-time');
+      if (!el) return;
+      const now = new Date();
+      const p = function (n) { return String(n).padStart(2, '0'); };
+      el.textContent = p(now.getHours()) + ':' + p(now.getMinutes()) + ':' + p(now.getSeconds());
+    }
+
+    // Reveal-on-scroll via IntersectionObserver
+    function initReveal() {
+      const items = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) {
+        items.forEach(function (el) { el.classList.add('in-view'); });
+        return;
+      }
+      const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+      items.forEach(function (el) { io.observe(el); });
+    }
+
+    // Mobile menu toggle
+    function initMobileMenu() {
+      const btn = document.getElementById('menu-toggle');
+      const menu = document.getElementById('mobile-menu');
+      if (!btn || !menu) return;
+      btn.addEventListener('click', function () { menu.classList.toggle('hidden'); });
+      menu.querySelectorAll('.mob-link').forEach(function (a) {
+        a.addEventListener('click', function () { menu.classList.add('hidden'); });
+      });
+    }
+
+    /* ---------- 9. INIT ---------- */
+    function init() {
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      buildFilterTabs();
+      renderMetrics();
+      renderTable();
+
+      // KPI cards act as quick filters
+      document.querySelectorAll('.kpi-card').forEach(function (card) {
+        card.addEventListener('click', function () { setFilter(card.getAttribute('data-filter')); });
+      });
+
+      // search (debounced lightly via input event)
+      document.getElementById('search-input').addEventListener('input', function (e) {
+        searchQuery = e.target.value.trim();
+        renderTable();
+      });
+
+      // form
+      document.getElementById('add-form').addEventListener('submit', handleSubmit);
+
+      // misc
+      tickClock();
+      setInterval(tickClock, 1000);
+      initReveal();
+      initMobileMenu();
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+  </script>
+</body>
+</html>
